@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>识字卡片</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#FFFEF5;--card:#FFFFFF;--text:#2C2C2A;--muted:#888780;--border:#E8E6DF;
+  --purple:#7F77DD;--purple-l:#EEEDFE;--purple-d:#3C3489;
+  --green:#639922;--green-l:#EAF3DE;--green-d:#27500A;
+  --coral:#D85A30;--coral-l:#FAECE7;--coral-d:#993C1D;
+  --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+  --teal:#1D9E75;--teal-l:#E1F5EE;--teal-d:#085041;
+}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--text);min-height:100vh;}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;}
+.tab{flex:1;padding:8px;text-align:center;font-size:14px;font-weight:500;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
+.tab.active{background:var(--purple-l);color:var(--purple-d);border-color:#AFA9EC;}
+
+.view{display:none;max-width:520px;margin:0 auto;padding:12px 16px 80px;}
+.view.active{display:block;}
+
+/* ===== STUDY VIEW ===== */
+.session-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.session-header h2{font-size:15px;font-weight:500;color:var(--text);}
+.session-header .prog-txt{font-size:13px;color:var(--muted);}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;margin-bottom:14px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--purple);border-radius:3px;transition:width .4s ease;}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 20px 22px;text-align:center;position:relative;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:12px;}
+.card-badge{position:absolute;top:14px;left:16px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;}
+.badge-new{background:var(--teal-l);color:var(--teal-d);}
+.badge-review{background:var(--amber-l);color:var(--amber-d);}
+.card-level{position:absolute;top:14px;right:16px;font-size:11px;color:var(--muted);}
+
+.pinyin{font-size:24px;color:var(--purple);margin-bottom:4px;letter-spacing:3px;min-height:32px;}
+.hanzi{font-size:110px;line-height:1.05;color:var(--text);cursor:pointer;user-select:none;transition:transform .08s;margin:4px 0;}
+.hanzi:active{transform:scale(0.93);}
+.stroke-info{font-size:13px;color:var(--muted);margin-top:2px;}
+.example-box{margin-top:10px;font-size:16px;color:var(--muted);line-height:1.7;cursor:pointer;padding:8px 12px;border-radius:12px;transition:background .15s;}
+.example-box:active{background:var(--purple-l);}
+.example-box .hl{color:var(--purple-d);font-weight:500;}
+.tap-hint{font-size:11px;color:var(--muted);opacity:.5;margin-top:6px;}
+
+/* ===== SYNC ===== */
+.sync-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px;}
+.sync-btn{width:100%;background:var(--purple-l);color:var(--purple-d);border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;}
+.sync-btn:active{opacity:.8;}
+.sync-textarea{width:100%;min-height:64px;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--text);background:var(--bg);resize:vertical;margin-top:8px;line-height:1.5;word-break:break-all;}
+.sync-status{font-size:12px;color:var(--purple-d);margin-top:8px;min-height:16px;}
+.sync-divider{height:14px;}
+
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.btn{border:none;border-radius:16px;padding:14px 10px;font-size:15px;font-weight:500;cursor:pointer;transition:transform .08s,opacity .1s;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.btn:active{transform:scale(0.96);}
+.btn-icon{font-size:26px;}
+.btn-know{background:var(--green-l);color:var(--green-d);}
+.btn-forget{background:var(--coral-l);color:var(--coral-d);}
+.btn-skip{width:100%;background:transparent;border:1px solid var(--border);border-radius:14px;padding:10px;font-size:14px;color:var(--muted);cursor:pointer;}
+.btn-skip:active{background:var(--border);}
+
+/* ===== COMPLETE ===== */
+.complete{text-align:center;padding:24px 8px;}
+.complete-emoji{font-size:64px;margin-bottom:12px;}
+.complete h3{font-size:22px;font-weight:500;margin-bottom:6px;}
+.complete p{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px;}
+.summary-row{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+.sum-item{background:var(--border);border-radius:14px;padding:12px 18px;text-align:center;flex:1;}
+.sum-num{font-size:26px;font-weight:500;}
+.sum-lbl{font-size:12px;color:var(--muted);margin-top:2px;}
+.btn-again{background:var(--purple-l);color:var(--purple-d);border:none;border-radius:14px;padding:12px 36px;font-size:15px;font-weight:500;cursor:pointer;}
+
+/* ===== MANAGE VIEW ===== */
+.manage-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.manage-top h3{font-size:15px;font-weight:500;}
+.manage-top span{font-size:13px;color:var(--muted);}
+.filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-btn{padding:5px 14px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
+.filter-btn.on{background:var(--purple-l);color:var(--purple-d);border-color:#AFA9EC;}
+.word-grid{display:grid;gap:6px;}
+.word-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px 14px;}
+.wchar{font-size:34px;min-width:44px;text-align:center;}
+.winfo{flex:1;}
+.wpin{font-size:13px;color:var(--purple);}
+.wstat{font-size:12px;color:var(--muted);margin-top:1px;}
+.wbadge{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.b-new{background:var(--teal-l);color:var(--teal-d);}
+.b-rev{background:var(--amber-l);color:var(--amber-d);}
+.b-ok{background:var(--green-l);color:var(--green-d);}
+.wreset{border:none;background:none;font-size:16px;cursor:pointer;padding:4px;color:var(--muted);}
+
+/* ===== SETTINGS VIEW ===== */
+.setting-section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;}
+.setting-section h4{font-size:13px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;}
+.setting-row label{font-size:15px;color:var(--text);}
+.setting-row input[type=range]{width:120px;}
+.setting-row select{border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:14px;background:var(--bg);color:var(--text);}
+.setting-val{font-size:14px;color:var(--purple);min-width:28px;text-align:right;}
+.danger-btn{width:100%;background:var(--coral-l);color:var(--coral-d);border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;margin-top:4px;}
+.info-box{background:var(--purple-l);border-radius:12px;padding:12px;font-size:13px;color:var(--purple-d);line-height:1.6;margin-bottom:12px;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(44,44,42,.88);color:#fff;padding:9px 20px;border-radius:20px;font-size:14px;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('study')">今天学习</button>
+  <button class="tab" onclick="showTab('manage')">字库</button>
+  <button class="tab" onclick="showTab('settings')">设置</button>
+</div>
+
+<div class="view active" id="view-study">
+  <div id="study-content"></div>
+</div>
+
+<div class="view" id="view-manage">
+  <div class="manage-top">
+    <h3>全部汉字</h3>
+    <span id="manage-stat"></span>
+  </div>
+  <div class="filter-row">
+    <button class="filter-btn on" onclick="setFilter('all',this)">全部</button>
+    <button class="filter-btn" onclick="setFilter('new',this)">未学</button>
+    <button class="filter-btn" onclick="setFilter('review',this)">复习中</button>
+    <button class="filter-btn" onclick="setFilter('known',this)">已掌握</button>
+  </div>
+  <div class="word-grid" id="word-grid"></div>
+</div>
+
+<div class="view" id="view-settings">
+  <div class="info-box">📖 字表来自《四五快读》1-6册，共552个核心汉字，按儿童认知规律排序（具象→抽象）。后续字来自小学常用字频表。</div>
+  <div class="setting-section">
+    <h4>跨设备同步</h4>
+    <div class="sync-desc">在另一台设备上继续进度：在这台设备点"生成同步码"并复制，再打开另一台设备，把同步码粘贴到下方框里点击合并。如果两台设备登录了同一个iCloud账号，复制后可以在另一台设备的粘贴框里直接长按选择"粘贴"，不用手动打字。已学过的字会按"最近更新时间"自动合并，不会互相覆盖。</div>
+    <button class="sync-btn" onclick="generateSyncCode()">📤 生成同步码</button>
+    <textarea id="sync-export-box" class="sync-textarea" readonly style="display:none;" onclick="this.select()"></textarea>
+    <button id="copy-sync-btn" class="sync-btn" style="display:none;margin-top:6px;" onclick="copySyncCode()">复制同步码</button>
+    <div class="sync-divider"></div>
+    <textarea id="sync-import-box" class="sync-textarea" placeholder="粘贴从另一台设备生成的同步码"></textarea>
+    <button class="sync-btn" onclick="importSyncCode()" style="margin-top:6px;">📥 粘贴并合并进度</button>
+    <div class="sync-status" id="sync-status"></div>
+  </div>
+  <div class="setting-section">
+    <h4>学习设置</h4>
+    <div class="setting-row">
+      <label>每天新字数</label>
+      <input type="range" min="1" max="6" value="3" id="set-new" oninput="updateSetting('newPerDay',+this.value);document.getElementById('val-new').textContent=this.value">
+      <span class="setting-val" id="val-new">3</span>
+    </div>
+  </div>
+  <div class="setting-section">
+    <h4>复习间隔（艾宾浩斯）</h4>
+    <div class="setting-row" style="font-size:13px;color:var(--muted);display:block;line-height:1.8;">
+      认识后：当天 → 1天后 → 3天后 → 7天后 → 14天后 → 30天后 → 毕业✓
+    </div>
+  </div>
+  <div class="setting-section">
+    <h4>数据管理</h4>
+    <button class="danger-btn" onclick="resetAll()">⚠️ 清除所有学习记录（重新开始）</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===========================
+// 字库：四五快读1-6册 + 补充常用字，共约800字
+// 格式：[汉字, 拼音, 笔画数, 例句（目标字用★标注）]
+// ===========================
+const WORDS_RAW = [
+// 第一册（1-88字）：最基础具象字
+["人","rén",2,"★是世界上最聪明的动物"],
+["口","kǒu",3,"用★说话"],
+["大","dà",3,"大象的耳朵很★"],
+["中","zhōng",4,"★间那个苹果最红"],
+["小","xiǎo",3,"小猫咪很★"],
+["哭","kū",10,"不要★了，我陪你玩"],
+["笑","xiào",10,"你的★声真好听"],
+["一","yī",1,"★加一等于二"],
+["上","shàng",3,"太阳在天★"],
+["下","xià",3,"雨从天上落到地★"],
+["爸","bà",8,"我的★爸是超人"],
+["妈","mā",6,"★妈的手很温暖"],
+["天","tiān",4,"今天的★空是蓝色的"],
+["太","tài",4,"今天★热了"],
+["月","yuè",4,"★亮弯弯像小船"],
+["二","èr",2,"★加二等于四"],
+["地","dì",6,"★上有很多小虫子"],
+["阳","yáng",6,"太★出来了"],
+["亮","liàng",9,"月亮真★"],
+["星","xīng",9,"天上有很多★星"],
+["云","yún",4,"白★飘啊飘"],
+["火","huǒ",4,"★很热，不要去碰"],
+["水","shuǐ",4,"多喝★对身体好"],
+["三","sān",3,"我有★个苹果"],
+["土","tǔ",3,"种子埋在★里"],
+["山","shān",3,"★上有积雪"],
+["石","shí",5,"河边有好多★头"],
+["木","mù",4,"★头做成了桌子"],
+["我","wǒ",7,"★爱我的家人"],
+["好","hǎo",6,"今天天气真★"],
+["有","yǒu",6,"我★一个弟弟"],
+["田","tián",5,"★里种着水稻"],
+["牛","niú",4,"★儿很勤劳"],
+["羊","yáng",6,"小★的毛软软的"],
+["聪","cōng",15,"你真★明"],
+["耳","ěr",6,"用★朵听音乐"],
+["目","mù",5,"用★认字"],
+["心","xīn",4,"★里很高兴"],
+["和","hé",8,"我★弟弟是好朋友"],
+["四","sì",5,"我有★本书"],
+["明","míng",8,"今天天气★朗"],
+["头","tóu",5,"点★同意"],
+["眉","méi",9,"★毛弯弯的"],
+["鼻","bí",14,"用★子闻花香"],
+["手","shǒu",4,"洗★再吃饭"],
+["花","huā",7,"公园里的★很漂亮"],
+["树","shù",9,"院子里有棵大★"],
+["五","wǔ",4,"数到★，游戏开始"],
+["草","cǎo",9,"草地上的★绿绿的"],
+["叶","yè",5,"秋天叶子变红了"],
+["日","rì",4,"★记里写下今天"],
+["风","fēng",4,"春天的★很温柔"],
+["雨","yǔ",8,"下★了，打伞出门"],
+["的","de",8,"我★书包是红色的"],
+["孩","hái",9,"小★子爱玩游戏"],
+["六","liù",4,"★只小鸭子"],
+["白","bái",5,"白云★白白的"],
+["红","hóng",6,"苹果是★色的"],
+["是","shì",9,"这★一本书"],
+["家","jiā",10,"我★有三口人"],
+["多","duō",6,"今天有很★朋友来"],
+["唱","chàng",11,"★歌是我的爱好"],
+["子","zi",3,"孩★要快快长大"],
+["七","qī",2,"★只小猪"],
+["爱","ài",10,"我★我的家人"],
+["爷","yé",6,"★爷讲故事"],
+["奶","nǎi",5,"★奶做饭香"],
+["少","shǎo",4,"糖果吃太★会蛀牙"],
+["歌","gē",14,"这首★好好听"],
+["不","bù",4,"我★想睡觉"],
+["朋","péng",8,"好★友一起玩"],
+["八","bā",2,"★只小鸟在枝头"],
+["宝","bǎo",8,"这是我的★贝"],
+["在","zài",6,"我★公园玩"],
+["学","xué",8,"★习新汉字"],
+["书","shū",4,"这本★真有趣"],
+["游","yóu",12,"去★泳啦"],
+["友","yǒu",4,"朋★之间要互相帮助"],
+["儿","ér",2,"小★子快跑"],
+["九","jiǔ",2,"★只小猫咪"],
+["贝","bèi",4,"海边捡到了贝★"],
+["生","shēng",5,"今天是我的★日"],
+["习","xí",3,"学★新单词"],
+["看","kàn",9,"★书是个好习惯"],
+["戏","xì",6,"玩游★很开心"],
+["字","zì",6,"学新★啦"],
+["气","qì",4,"今天的天★很好"],
+["十","shí",2,"★只手指头"],
+["会","huì",6,"我★游泳了"],
+["见","jiàn",4,"再★啦，再见！"],
+["早","zǎo",6,"★上好，新的一天开始了"],
+// 第二册（89-176字）
+["雪","xuě",11,"冬天下大★"],
+["鸡","jī",7,"大公★每天早起叫"],
+["绿","lǜ",11,"春天的草★绿的"],
+["黄","huáng",11,"树叶变★了"],
+["青","qīng",8,"★蛙呱呱叫"],
+["鱼","yú",8,"小★在水里游"],
+["做","zuò",11,"我会★饭了"],
+["飞","fēi",3,"小鸟★起来了"],
+["跑","pǎo",12,"我们比★步吧"],
+["要","yào",9,"我★喝水"],
+["吃","chī",6,"我喜欢★苹果"],
+["鸟","niǎo",5,"小★唱歌"],
+["他","tā",5,"★是我的好朋友"],
+["们","men",5,"小朋友★一起玩"],
+["春","chūn",9,"★天来了"],
+["夏","xià",10,"★天很热"],
+["秋","qiū",9,"★天叶子变红"],
+["冬","dōng",5,"★天下雪"],
+["季","jì",8,"一年有四个★节"],
+["都","dōu",10,"★来啦"],
+["个","gè",3,"我有一★苹果"],
+["狗","gǒu",8,"小★摇尾巴"],
+["猫","māo",11,"小★爱喝牛奶"],
+["蓝","lán",13,"天空是★色的"],
+["落","luò",12,"叶子★下来了"],
+["真","zhēn",10,"这个苹果★甜"],
+["开","kāi",4,"花儿★了"],
+["说","shuō",14,"你说什么"],
+["也","yě",3,"我★爱吃苹果"],
+["马","mǎ",3,"★跑得很快"],
+["米","mǐ",6,"吃白★饭"],
+["哥","gē",10,"★哥带我去玩"],
+["姐","jiě",8,"★姐最关心我"],
+["来","lái",7,"小猫★了"],
+["黑","hēi",12,"★板上写字"],
+["去","qù",5,"我们一起★公园"],
+["出","chū",5,"太阳★来了"],
+["跳","tiào",13,"小兔子★跳跳"],
+["着","zhe",11,"走★走着就到了"],
+["了","le",2,"吃完饭★"],
+["你","nǐ",7,"★好，认识你真高兴"],
+["又","yòu",2,"我★饿了"],
+["弟","dì",7,"★弟跟我玩"],
+["妹","mèi",8,"★妹很可爱"],
+["东","dōng",5,"太阳从★边升起"],
+["就","jiù",12,"这★是我画的画"],
+["还","hái",7,"我★想吃一个"],
+["快","kuài",7,"★跑！来得及"],
+["得","de",11,"跑★真快"],
+["西","xī",6,"太阳在★边落下"],
+["乐","lè",5,"快★地笑了"],
+["到","dào",8,"我们★了"],
+["起","qǐ",10,"一★做游戏"],
+["玩","wán",8,"出去★耍吧"],
+["捉","zhuō",10,"★迷藏"],
+["迷","mí",9,"捉★藏"],
+["球","qiú",11,"踢★去"],
+["很","hěn",9,"我★高兴"],
+["高","gāo",10,"大树长得★"],
+["鸭","yā",10,"小★在水里游"],
+["哈","hā",9,"★哈哈大笑"],
+["方","fāng",4,"这个★向对吗"],
+["爬","pá",8,"小虫子★上来了"],
+["藏","cáng",17,"捉迷★"],
+["兴","xìng",6,"高★极了"],
+["向","xiàng",6,"向★走去"],
+["对","duì",5,"回答★了"],
+["能","néng",10,"我★做到"],
+["叫","jiào",5,"小鸟在★"],
+["变","biàn",8,"天气★冷了"],
+["问","wèn",6,"我来★一个问题"],
+["成","chéng",6,"长大想★为科学家"],
+["再","zài",6,"★见，明天见"],
+["急","jí",9,"别着★"],
+["教","jiāo",11,"妈妈★我识字"],
+["门","mén",3,"推开★走进去"],
+// 第三册（177-264字）
+["只","zhǐ",5,"只有★一个苹果了"],
+["回","huí",6,"★家吃饭"],
+["公","gōng",4,"★园里有很多花"],
+["打","dǎ",5,"★篮球去"],
+["兔","tù",8,"小白★"],
+["请","qǐng",15,"★坐，坐下"],
+["过","guò",6,"走★去看看"],
+["吗","ma",6,"你饿了★？"],
+["泳","yǒng",8,"游★比赛"],
+["虫","chóng",6,"小★在爬"],
+["把","bǎ",7,"★苹果给我"],
+["驮","tuó",6,"马★着重物"],
+["鹅","é",18,"大白★鹅鹅鹅"],
+["河","hé",8,"★里有鱼"],
+["礼","lǐ",5,"送★物"],
+["背","bēi",9,"★书包上学"],
+["拿","ná",10,"★起书来读"],
+["里","lǐ",7,"家★有好吃的"],
+["后","hòu",6,"★面有什么"],
+["谢","xiè",17,"谢★你的帮忙"],
+["边","biān",5,"河★有树"],
+["貌","mào",14,"礼★待人"],
+["班","bān",10,"我们★级"],
+["幼","yòu",5,"★儿园"],
+["园","yuán",13,"公★里有花"],
+["照","zhào",13,"★相留念"],
+["婆","pó",11,"外★外很慈祥"],
+["甜","tián",11,"西瓜真★"],
+["梦","mèng",13,"做了个好★"],
+["老","lǎo",6,"★师讲故事"],
+["盒","hé",11,"文具★里有铅笔"],
+["尺","chǐ",4,"用★量一量"],
+["刀","dāo",2,"小★很锋利"],
+["时","shí",7,"吃饭★间到了"],
+["正","zhèng",5,"★在读书"],
+["文","wén",4,"★章写得好"],
+["具","jù",8,"文★都在盒子里"],
+["笔","bǐ",10,"用★写字"],
+["画","huà",8,"★了一幅画"],
+["长","cháng",8,"这条鱼好★"],
+["放","fàng",8,"★学了"],
+["用","yòng",5,"铅笔★来写字"],
+["总","zǒng",9,"我★是忘记"],
+["尾","wěi",7,"猫的★巴长长的"],
+["巴","bā",4,"下★巴"],
+["玉","yù",5,"这块★很漂亮"],
+["尖","jiān",6,"铅笔的笔★"],
+["竹","zhú",6,"大熊猫吃★子"],
+["苗","miáo",8,"小树★长大了"],
+["听","tīng",7,"★故事"],
+["话","huà",13,"说好★"],
+["猴","hóu",13,"小★子"],
+["猩","xīng",13,"大★猩"],
+["给","gěi",12,"妈妈★我糖"],
+["进","jìn",7,"走★去"],
+["告","gào",7,"★诉我秘密"],
+["电","diàn",5,"★视里有好节目"],
+["诉","sù",12,"告★我"],
+["念","niàn",8,"大声朗★"],
+["饭","fàn",7,"吃★了"],
+["乖","guāi",8,"小朋友真★"],
+["想","xiǎng",13,"我★吃西瓜"],
+["面","miàn",9,"前★走"],
+["住","zhù",7,"我★在这里"],
+["前","qián",9,"向★走"],
+["从","cóng",4,"我★家出发"],
+["同","tóng",6,"一★学习"],
+["没","méi",7,"我★有钱"],
+["送","sòng",9,"★礼物"],
+["果","guǒ",8,"水★很甜"],
+["工","gōng",3,"★人叔叔"],
+["厂","chǎng",2,"★里很热闹"],
+["产","chǎn",6,"出★品"],
+["动","dòng",6,"运★会"],
+["关","guān",6,"★心好朋友"],
+["找","zhǎo",7,"我来★你"],
+["按","àn",9,"★门铃"],
+["年","nián",6,"过新★了"],
+["节","jié",13,"节★快乐"],
+["桃","táo",10,"吃★子"],
+// 第四册（265-352字）
+["荷","hé",10,"★花真漂亮"],
+["菊","jú",11,"秋天开★花"],
+["梅","méi",11,"冬天开★花"],
+["冷","lěng",7,"冬天好★"],
+["它","tā",5,"★是一只猫"],
+["怕","pà",8,"我不★"],
+["躲","duǒ",13,"捉迷藏时要★起来"],
+["勇","yǒng",9,"要★敢"],
+["敢","gǎn",12,"勇★面对困难"],
+["堆","duī",11,"雪★很高"],
+["仗","zhàng",5,"打雪★"],
+["柳","liǔ",9,"春天★树发芽了"],
+["农","nóng",6,"★民伯伯辛苦了"],
+["民","mín",5,"人★"],
+["伯","bó",7,"伯★伯问我"],
+["种","zhòng",9,"★下希望的种子"],
+["最","zuì",12,"我★喜欢苹果"],
+["片","piàn",4,"一★叶子"],
+["吹","chuī",7,"风★来了"],
+["浇","jiāo",9,"给花★水"],
+["燕","yàn",16,"小★子飞走了"],
+["睡","shuì",13,"早点★觉"],
+["醒","xǐng",16,"睡★了就起床"],
+["蛙","wā",12,"青★呱呱叫"],
+["呱","guā",8,"青蛙★呱叫"],
+["南","nán",9,"我们去★方旅行"],
+["椅","yǐ",12,"坐在★子上"],
+["坐","zuò",7,"请★下"],
+["身","shēn",7,"★体要健康"],
+["吧","ba",7,"走★，去玩"],
+["桌","zhuō",10,"★上有书"],
+["布","bù",5,"窗帘是彩色★"],
+["抱","bào",8,"妈妈★着我"],
+["摔","shuāi",14,"小心别★倒了"],
+["声","shēng",7,"小★说话"],
+["谁","shéi",10,"★来了？"],
+["呢","ne",8,"你呢，你去★？"],
+["认","rèn",4,"我来★识这个字"],
+["原","yuán",10,"没关系，我★谅你"],
+["痛","tòng",12,"受伤了好★"],
+["喊","hǎn",12,"大声★出来"],
+["狼","láng",10,"大灰★来了"],
+["啦","la",11,"下雨★"],
+["赶","gǎn",10,"快点★上"],
+["救","jiù",11,"帮帮我，★命啊"],
+["假","jiǎ",11,"放★了好开心"],
+["掉","diào",11,"苹果★下来了"],
+["路","lù",13,"★上要小心"],
+["碰","pèng",13,"小心别★到"],
+["哪","nǎ",12,"你去★里"],
+["呀","ya",8,"好棒★"],
+["两","liǎng",7,"我有★个苹果"],
+["逃","táo",9,"小兔子★跑了"],
+["走","zǒu",7,"我们★吧"],
+["她","tā",6,"★是我的好朋友"],
+["点","diǎn",9,"一★点来"],
+["音","yīn",9,"★乐很好听"],
+["可","kě",5,"你真★爱"],
+["伸","shēn",7,"★出手来"],
+["缝","féng",16,"针线★衣服"],
+["夹","jiā",6,"用筷子★菜"],
+["根","gēn",10,"这★绳子"],
+["棍","gùn",12,"木★"],
+["丢","diū",6,"把垃圾★进桶里"],
+["灰","huī",6,"老鼠★灰色的"],
+["萝","luó",11,"胡★卜"],
+["卜","bo",2,"萝★"],
+["熟","shú",15,"苹果★了"],
+["拔","bá",8,"★萝卜"],
+["拉","lā",8,"大家一起★"],
+["鼠","shǔ",13,"小老★"],
+["咕","gū",8,"肚子★噜噜叫"],
+["咚","dōng",9,"★的一声"],
+["倒","dǎo",10,"树★下来了"],
+["抬","tái",8,"★起头来"],
+["晚","wǎn",11,"★上好"],
+["左","zuǒ",5,"向★转"],
+["右","yòu",5,"向★转"],
+["怎","zěn",9,"★么了"],
+["么","me",3,"什★"],
+["办","bàn",4,"怎么★"],
+["知","zhī",8,"我★道了"],
+["道","dào",12,"知★了"],
+["午","wǔ",4,"中★吃饭"],
+["这","zhè",7,"★是什么"],
+["座","zuò",10,"这★山好高"],
+["洞","dòng",9,"小兔子的★"],
+["什","shén",4,"★么意思"],
+["害","hài",10,"有什么★怕的"],
+// 第五册（353-440字）
+["付","fù",5,"请★款"],
+["顶","dǐng",8,"山★"],
+["角","jiǎo",7,"桌子有四个★"],
+["死","sǐ",6,"别担心，我不会★的"],
+["扑","pū",5,"小猫★过去"],
+["期","qī",12,"★待新的一天"],
+["带","dài",9,"★着水壶出门"],
+["分","fēn",4,"★享快乐"],
+["清","qīng",11,"水很★"],
+["今","jīn",4,"★天天气好"],
+["昨","zuó",9,"★天下雨了"],
+["光","guāng",6,"阳★灿烂"],
+["阴","yīn",6,"今天是★天"],
+["错","cuò",13,"我做★了"],
+["指","zhǐ",9,"用手★一指"],
+["拇","mǔ",8,"★指最大"],
+["食","shí",9,"★物很好吃"],
+["无","wú",4,"★所畏惧"],
+["名","míng",6,"这个字叫什么★字"],
+["加","jiā",5,"一★一等于二"],
+["共","gòng",6,"一★学习"],
+["事","shì",8,"有什么★"],
+["帮","bāng",9,"互相★助"],
+["饿","è",10,"我好★"],
+["肚","dù",7,"★子好饿"],
+["狮","shī",13,"大★是百兽之王"],
+["觉","jué",9,"感★这个字很有趣"],
+["毛","máo",4,"小鸡的★软软的"],
+["求","qiú",7,"请★帮我"],
+["等","děng",12,"请★一下"],
+["香","xiāng",9,"花好★"],
+["肉","ròu",6,"吃★长身体"],
+["张","zhāng",7,"一★纸"],
+["网","wǎng",6,"蜘蛛织★"],
+["咬","yǎo",9,"小狗★了我一下"],
+["力","lì",2,"用★气推"],
+["啊","ā",11,"★，真漂亮"],
+["牙","yá",4,"刷★保护牙齿"],
+["嘴","zuǐ",16,"闭上★"],
+["漂","piào",14,"★亮的花"],
+["胡","hú",9,"★乱乱的"],
+["虎","hǔ",8,"老★是百兽之王"],
+["贴","tiē",9,"把贴纸★上去"],
+["才","cái",3,"这★是真正的本领"],
+["数","shù",13,"★学很有意思"],
+["更","gèng",7,"今天比昨天★冷了"],
+["朵","duǒ",6,"一★花"],
+["纸","zhǐ",10,"一张白★"],
+["圆","yuán",10,"月亮★圆的"],
+["圈","quān",11,"画个★"],
+["亲","qīn",16,"★爱的妈妈"],
+["脸","liǎn",10,"红红的★"],
+["眼","yǎn",11,"★睛很漂亮"],
+["睛","jīng",13,"眼★"],
+["接","jiē",11,"★住球"],
+["外","wài",5,"★面下雨了"],
+["笨","bèn",11,"我不★"],
+["以","yǐ",4,"可★去公园"],
+["自","zì",6,"★己做到"],
+["己","jǐ",3,"自★"],
+["慢","màn",14,"走路太★了"],
+["难","nán",19,"这个字好★写"],
+["练","liàn",8,"多★习"],
+["每","měi",7,"★天学习"],
+["颗","kē",17,"一★小星星"],
+["样","yàng",10,"这是什么★子"],
+["因","yīn",6,"★为很努力"],
+["为","wéi",4,"因★"],
+["离","lí",10,"★家去上学"],
+["近","jìn",7,"离家很★"],
+["象","xiàng",12,"大★有长鼻子"],
+["船","chuán",11,"坐★过河"],
+["闪","shǎn",5,"眼睛★闪发光"],
+["金","jīn",8,"★子很珍贵"],
+["美","měi",9,"★丽的花园"],
+["丽","lì",7,"美★"],
+["当","dāng",6,"我要★医生"],
+["扇","shān",10,"一把小★子"],
+["满","mǎn",13,"装★了水"],
+["干","gàn",3,"把事情做★"],
+["朝","zhāo",12,"每★早起"],
+["熊","xióng",14,"大★猫喜欢竹子"],
+["娃","wá",9,"小★娃的眼睛大大的"],
+["汽","qì",7,"★车跑得快"],
+["车","chē",4,"火★来了"],
+["北","běi",5,"去★京"],
+["京","jīng",8,"北★是首都"],
+["往","wǎng",8,"★前走"],
+["呜","wū",8,"火车★呜叫"],
+["鹿","lù",11,"小★的角很漂亮"],
+["森","sēn",12,"★林里有很多动物"],
+["林","lín",8,"树★"],
+["采","cǎi",8,"★蘑菇"],
+["蘑","mó",19,"★菇好吃"],
+["菇","gū",11,"蘑★"],
+["篮","lán",16,"★子里有苹果"],
+["直","zhí",8,"站★了"],
+["摸","mō",13,"★一摸"],
+["苔","tái",8,"青★"],
+["所","suǒ",8,"这★学校"],
+["科","kē",9,"★学家"],
+["灯","dēng",6,"开★"],
+["应","yīng",7,"回★"],
+["该","gāi",13,"应★"],
+// 第六册（441-552字）
+["读","dú",10,"大声朗★"],
+["写","xiě",5,"★汉字"],
+["字","zì",6,"认★"],
+["句","jù",5,"造个★子"],
+["段","duàn",9,"这个★落"],
+["文","wén",4,"★章"],
+["章","zhāng",11,"文★"],
+["思","sī",9,"意★"],
+["意","yì",13,"注★"],
+["注","zhù",8,"★意"],
+["课","kè",15,"上★了"],
+["本","běn",5,"我有一★书"],
+["作","zuò",7,"制★"],
+["业","yè",5,"作★"],
+["题","tí",18,"问★"],
+["答","dá",12,"回★"],
+["问","wèn",6,"提★"],
+["练","liàn",8,"★习"],
+["习","xí",3,"练★"],
+["复","fù",9,"★习"],
+["记","jì",5,"笔★"],
+["忘","wàng",7,"不★记"],
+["懂","dǒng",15,"★了"],
+["解","jiě",13,"了★"],
+["能","néng",10,"★干"],
+["干","gàn",3,"能★"],
+["好","hǎo",6,"真★"],
+["棒","bàng",12,"真★"],
+["厉","lì",5,"★害"],
+["害","hài",10,"厉★"],
+// 补充常用字（小学高频字）
+["妈","mā",6,"★妈做饭香"],
+["吃","chī",6,"★饭啦"],
+["喝","hē",12,"★水"],
+["睡","shuì",13,"★觉"],
+["玩","wán",8,"出去★"],
+["跑","pǎo",12,"快★"],
+["坐","zuò",7,"请★"],
+["站","zhàn",10,"★起来"],
+["走","zǒu",7,"快★"],
+["跳","tiào",13,"★起来"],
+["唱","chàng",11,"★歌"],
+["画","huà",8,"★画"],
+["写","xiě",5,"★字"],
+["看","kàn",9,"★书"],
+["听","tīng",7,"★话"],
+["说","shuō",14,"★话"],
+["问","wèn",6,"★问题"],
+["笑","xiào",10,"开心地★"],
+["哭","kū",10,"别★了"],
+["爱","ài",10,"★护动物"],
+["帮","bāng",9,"★助别人"],
+["打","dǎ",5,"★球"],
+["踢","tī",15,"★球"],
+["游","yóu",12,"★泳"],
+["拍","pāi",8,"★手"],
+["抱","bào",8,"★一抱"],
+["推","tuī",11,"轻轻★"],
+["拉","lā",8,"用力★"],
+["扔","rēng",5,"★球"],
+["接","jiē",11,"★住了"],
+["摸","mō",13,"★一摸"],
+["拿","ná",10,"★过来"],
+["放","fàng",8,"★下来"],
+["开","kāi",4,"★门"],
+["关","guān",6,"★门"],
+["进","jìn",7,"走★来"],
+["出","chū",5,"走★去"],
+["上","shàng",3,"走★去"],
+["下","xià",3,"走★来"],
+["左","zuǒ",5,"向★转"],
+["右","yòu",5,"向★转"],
+["前","qián",9,"向★走"],
+["后","hòu",6,"向★退"],
+["里","lǐ",7,"屋子★"],
+["外","wài",5,"门★"],
+["中","zhōng",4,"当★"],
+["间","jiān",12,"中★"],
+["旁","páng",10,"身★"],
+["边","biān",5,"旁★"],
+["这","zhè",7,"★个"],
+["那","nà",6,"★个"],
+["哪","nǎ",12,"★个"],
+["什","shén",4,"★么"],
+["谁","shéi",10,"★啊"],
+["为","wéi",4,"★什么"],
+["怎","zěn",9,"★么"],
+["多","duō",6,"★少"],
+["少","shǎo",4,"多★"],
+["长","cháng",8,"好★"],
+["短","duǎn",12,"好★"],
+["大","dà",3,"好★"],
+["小","xiǎo",3,"很★"],
+["高","gāo",10,"很★"],
+["低","dī",7,"很★"],
+["快","kuài",7,"很★"],
+["慢","màn",14,"好★"],
+["热","rè",10,"好★"],
+["冷","lěng",7,"好★"],
+["甜","tián",11,"好★"],
+["苦","kǔ",8,"好★"],
+["香","xiāng",9,"真★"],
+["臭","chòu",10,"真★"],
+["软","ruǎn",8,"好★"],
+["硬","yìng",12,"好★"],
+["圆","yuán",10,"很★"],
+["方","fāng",4,"很★"],
+["新","xīn",13,"好★"],
+["旧","jiù",5,"有点★"],
+["干","gān",3,"很★净"],
+["净","jìng",8,"干★"],
+["亮","liàng",9,"真★"],
+["暗","àn",13,"有点★"],
+["早","zǎo",6,"★上好"],
+["晚","wǎn",11,"★上好"],
+["今","jīn",4,"★天"],
+["明","míng",8,"★天"],
+["昨","zuó",9,"★天"],
+["年","nián",6,"去★"],
+["月","yuè",4,"上个★"],
+["天","tiān",4,"每★"],
+["时","shí",7,"有★"],
+["候","hòu",10,"时★"],
+["春","chūn",9,"★天来了"],
+["夏","xià",10,"★天游泳"],
+["秋","qiū",9,"★天摘苹果"],
+["冬","dōng",5,"★天堆雪人"],
+["风","fēng",4,"刮★了"],
+["雨","yǔ",8,"下★了"],
+["雪","xuě",11,"下★了"],
+["云","yún",4,"白★飘"],
+["太","tài",4,"★阳"],
+["阳","yáng",6,"太★"],
+["月","yuè",4,"★亮"],
+["星","xīng",9,"★星"],
+["花","huā",7,"鲜★"],
+["草","cǎo",9,"小★"],
+["树","shù",9,"大★"],
+["叶","yè",5,"树★"],
+["果","guǒ",8,"水★"],
+["苹","píng",8,"★果"],
+["香","xiāng",9,"★蕉"],
+["蕉","jiāo",15,"香★"],
+["梨","lí",11,"一个★"],
+["桃","táo",10,"桃★"],
+["瓜","guā",5,"西★"],
+["西","xī",6,"★瓜"],
+["菜","cài",11,"蔬★"],
+["饭","fàn",7,"吃★"],
+["面","miàn",9,"面★"],
+["包","bāo",5,"面★包"],
+["奶","nǎi",5,"牛★"],
+["蛋","dàn",11,"鸡★"],
+["肉","ròu",6,"吃★"],
+["鱼","yú",8,"小★"],
+["虾","xiā",9,"大★"],
+["狗","gǒu",8,"小★"],
+["猫","māo",11,"大★"],
+["兔","tù",8,"小白★"],
+["鸟","niǎo",5,"小★"],
+["鸡","jī",7,"大★"],
+["鸭","yā",10,"小★"],
+["鱼","yú",8,"金★"],
+["牛","niú",4,"小★"],
+["羊","yáng",6,"小★"],
+["马","mǎ",3,"大★"],
+["猪","zhū",11,"小★"],
+["熊","xióng",14,"大★"],
+["猴","hóu",13,"小★"],
+["象","xiàng",12,"大★"],
+["狮","shī",13,"大★"],
+["虎","hǔ",8,"老★"],
+["衣","yī",6,"★服"],
+["服","fú",8,"衣★"],
+["鞋","xié",15,"★子"],
+["帽","mào",12,"帽子"],
+["裤","kù",12,"裤子"],
+["袜","wà",10,"袜子"],
+["书","shū",4,"读★"],
+["包","bāo",5,"书★"],
+["笔","bǐ",10,"铅★"],
+["尺","chǐ",4,"量★"],
+["纸","zhǐ",10,"一张★"],
+["橡","xiàng",15,"★皮"],
+["皮","pí",5,"橡★"],
+["剪","jiǎn",11,"★刀"],
+["刀","dāo",2,"★子"],
+["椅","yǐ",12,"椅子"],
+["桌","zhuō",10,"桌子"],
+["床","chuáng",7,"床上"],
+["门","mén",3,"敲★"],
+["窗","chuāng",12,"★户"],
+["灯","dēng",6,"开★"],
+["电","diàn",5,"★视"],
+["视","shì",8,"电★"],
+["话","huà",13,"电★"],
+["路","lù",13,"马★"],
+["车","chē",4,"汽★"],
+["船","chuán",11,"坐★"],
+["飞","fēi",3,"★机"],
+["机","jī",6,"飞★"],
+["爸","bà",8,"★爸"],
+["妈","mā",6,"★妈"],
+["哥","gē",10,"★哥"],
+["姐","jiě",8,"★姐"],
+["弟","dì",7,"★弟"],
+["妹","mèi",8,"★妹"],
+["爷","yé",6,"★爷"],
+["奶","nǎi",5,"★奶"],
+["老","lǎo",6,"★师"],
+["师","shī",10,"老★"],
+["同","tóng",6,"★学"],
+["学","xué",8,"同★"],
+["朋","péng",8,"★友"],
+["友","yǒu",4,"朋★"],
+["医","yī",7,"★生"],
+["生","shēng",5,"医★"],
+["警","jǐng",19,"★察"],
+["察","chá",14,"警★"],
+["厨","chú",12,"★师"],
+["农","nóng",6,"★民"],
+["民","mín",5,"农★"],
+];
+
+// 去重
+const seen = new Set();
+const WORDS = WORDS_RAW.filter(w => {
+  if (seen.has(w[0])) return false;
+  seen.add(w[0]);
+  return true;
+}).map((w, i) => ({
+  char: w[0], pinyin: w[1], strokes: w[2], example: w[3], order: i
+}));
+
+// ===== STATE =====
+const INTERVALS_DAYS = [0, 1, 3, 7, 14, 30, 90]; // level 0=new, 1-6=review stages, 7=graduated
+
+function defaultState() {
+  return {
+    words: WORDS.map(w => ({
+      char: w.char, level: 0,
+      nextReview: Date.now(),
+      correct: 0, total: 0,
+      order: w.order, updatedAt: 0
+    })),
+    settings: { newPerDay: 3 },
+    todayNew: 0,
+    lastDate: new Date().toDateString()
+  };
+}
+
+let S = loadState();
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('shizi_v3');
+    if (!s) return defaultState();
+    const parsed = JSON.parse(s);
+    // migrate if new words added
+    const existChars = new Set(parsed.words.map(w => w.char));
+    WORDS.forEach(w => {
+      if (!existChars.has(w.char)) {
+        parsed.words.push({ char: w.char, level: 0, nextReview: Date.now(), correct: 0, total: 0, order: w.order, updatedAt: 0 });
+      }
+    });
+    parsed.words.forEach(w => { if (typeof w.updatedAt !== 'number') w.updatedAt = 0; });
+    return parsed;
+  } catch(e) { return defaultState(); }
+}
+
+function saveState() {
+  try { localStorage.setItem('shizi_v3', JSON.stringify(S)); } catch(e) {}
+}
+
+function checkNewDay() {
+  const today = new Date().toDateString();
+  if (S.lastDate !== today) { S.todayNew = 0; S.lastDate = today; saveState(); }
+}
+
+function getWordMeta(char) {
+  return WORDS.find(w => w.char === char);
+}
+
+function getDueCards() {
+  checkNewDay();
+  const now = Date.now();
+  const maxNew = S.settings.newPerDay;
+  const reviews = S.words.filter(w => w.level > 0 && w.level < 7 && w.nextReview <= now);
+  reviews.sort((a, b) => a.nextReview - b.nextReview);
+  const newSlots = maxNew - S.todayNew;
+  const newCards = newSlots > 0 ? S.words.filter(w => w.level === 0).sort((a,b) => a.order - b.order).slice(0, newSlots) : [];
+  return [...reviews, ...newCards];
+}
+
+// ===== STUDY STATE =====
+let queue = [], qIdx = 0, sessKnown = 0, sessForgot = 0;
+let currentCardMeta = null;
+
+function initSession() {
+  checkNewDay();
+  queue = getDueCards();
+  qIdx = 0; sessKnown = 0; sessForgot = 0;
+}
+
+// ===== RENDER =====
+function renderStudy() {
+  const el = document.getElementById('study-content');
+  if (qIdx >= queue.length) { currentCardMeta = null; el.innerHTML = renderComplete(); return; }
+  const wState = queue[qIdx];
+  const meta = getWordMeta(wState.char);
+  if (!meta) { qIdx++; renderStudy(); return; }
+  currentCardMeta = meta;
+  const isNew = wState.level === 0;
+  const total = queue.length;
+  const pct = Math.round((qIdx / total) * 100);
+
+  const exampleHtml = meta.example.replace('★', `<span class="hl">${meta.char}</span>`);
+
+  el.innerHTML = `
+    <div class="session-header">
+      <h2>${isNew ? '✨ 今天新字' : '📖 复习'}</h2>
+      <div class="prog-txt">${qIdx + 1} / ${total}</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <span class="card-badge ${isNew ? 'badge-new' : 'badge-review'}">${isNew ? '新字' : '第' + wState.level + '关'}</span>
+      <span class="card-level">${meta.strokes}画</span>
+      <div class="pinyin">${meta.pinyin}</div>
+      <div class="hanzi" onclick="speak(currentCardMeta.char)">${meta.char}</div>
+      <div class="example-box" onclick="speakExample()">🔊 ${exampleHtml}</div>
+      <div class="tap-hint">点大字听发音 · 点句子听例句</div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-forget" onclick="answer(false)">
+        <span class="btn-icon">🤔</span>还不认识
+      </button>
+      <button class="btn btn-know" onclick="answer(true)">
+        <span class="btn-icon">⭐</span>认识啦！
+      </button>
+    </div>
+    <button class="btn-skip" onclick="skipCard()">跳过这个字</button>
+  `;
+}
+
+function answer(known) {
+  const wState = queue[qIdx];
+  const idx = S.words.findIndex(w => w.char === wState.char);
+  if (idx === -1) { qIdx++; renderStudy(); return; }
+  S.words[idx].total++;
+  S.words[idx].updatedAt = Date.now();
+  if (known) {
+    sessKnown++;
+    const newLevel = Math.min(wState.level + 1, 7);
+    S.words[idx].level = newLevel;
+    S.words[idx].correct++;
+    if (wState.level === 0) S.todayNew++;
+    if (newLevel < 7) {
+      S.words[idx].nextReview = Date.now() + INTERVALS_DAYS[newLevel] * 86400000;
+    }
+  } else {
+    sessForgot++;
+    S.words[idx].level = Math.max(0, wState.level - 1);
+    S.words[idx].nextReview = Date.now();
+    if (wState.level === 0) S.todayNew = Math.max(0, S.todayNew - 0); // don't penalize new count
+  }
+  saveState();
+  qIdx++;
+  renderStudy();
+}
+
+function skipCard() { qIdx++; renderStudy(); }
+
+function renderComplete() {
+  const now = Date.now();
+  const dueTomorrow = S.words.filter(w => {
+    const d = (w.nextReview - now) / 86400000;
+    return w.level > 0 && w.level < 7 && d > 0 && d < 1.5;
+  }).length;
+  const graduated = S.words.filter(w => w.level >= 7).length;
+  const learned = S.words.filter(w => w.level > 0).length;
+  const emoji = sessKnown >= queue.length * 0.7 ? '🌟' : '💪';
+  const msg = sessKnown >= queue.length * 0.7 ? '太厉害了！' : '继续努力！';
+  return `
+    <div class="complete">
+      <div class="complete-emoji">${emoji}</div>
+      <h3>${msg}</h3>
+      <p>今天学了 <b>${S.todayNew}</b> 个新字<br>累计认识 <b>${learned}</b> 字 · 毕业 <b>${graduated}</b> 字<br>明天还要复习 <b>${dueTomorrow}</b> 个字哦</p>
+      <div class="summary-row">
+        <div class="sum-item"><div class="sum-num" style="color:#639922">${sessKnown}</div><div class="sum-lbl">认识</div></div>
+        <div class="sum-item"><div class="sum-num" style="color:#D85A30">${sessForgot}</div><div class="sum-lbl">还在学</div></div>
+        <div class="sum-item"><div class="sum-num">${queue.length}</div><div class="sum-lbl">共练习</div></div>
+      </div>
+      <button class="btn-again" onclick="initSession();renderStudy()">再来一轮</button>
+    </div>
+  `;
+}
+
+// ===== MANAGE =====
+let manageFilter = 'all';
+
+function setFilter(f, btn) {
+  manageFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderManage();
+}
+
+function renderManage() {
+  const now = Date.now();
+  let words = S.words.map(w => ({ ...w, meta: getWordMeta(w.char) })).filter(w => w.meta);
+  if (manageFilter === 'new') words = words.filter(w => w.level === 0);
+  else if (manageFilter === 'review') words = words.filter(w => w.level > 0 && w.level < 7);
+  else if (manageFilter === 'known') words = words.filter(w => w.level >= 7);
+  words.sort((a, b) => a.meta.order - b.meta.order);
+
+  const total = S.words.length;
+  const learned = S.words.filter(w => w.level > 0).length;
+  const graduated = S.words.filter(w => w.level >= 7).length;
+  document.getElementById('manage-stat').textContent = `${learned}/${total}字 · 毕业${graduated}`;
+
+  const grid = document.getElementById('word-grid');
+  grid.innerHTML = words.map(w => {
+    const due = w.level > 0 && w.level < 7 && w.nextReview <= now;
+    const isNew = w.level === 0;
+    const isGrad = w.level >= 7;
+    const badgeCls = isNew ? 'b-new' : isGrad ? 'b-ok' : due ? 'b-rev' : 'b-ok';
+    const badgeTxt = isNew ? '未学' : isGrad ? '毕业✓' : due ? '待复习' : `第${w.level}关`;
+    const acc = w.total > 0 ? Math.round(w.correct / w.total * 100) + '%' : '-';
+    return `<div class="word-row">
+      <div class="wchar">${w.char}</div>
+      <div class="winfo">
+        <div class="wpin">${w.meta.pinyin}</div>
+        <div class="wstat">${w.meta.strokes}画 · 正确率${acc}</div>
+      </div>
+      <span class="wbadge ${badgeCls}">${badgeTxt}</span>
+      ${!isNew ? `<button class="wreset" onclick="resetWord('${w.char}')" title="重置为未学">↺</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function resetWord(char) {
+  const idx = S.words.findIndex(w => w.char === char);
+  if (idx === -1) return;
+  S.words[idx].level = 0;
+  S.words[idx].nextReview = Date.now();
+  S.words[idx].correct = 0;
+  S.words[idx].total = 0;
+  S.words[idx].updatedAt = Date.now();
+  saveState();
+  renderManage();
+  toast('已重置为未学');
+}
+
+// ===== SETTINGS =====
+function updateSetting(key, val) {
+  S.settings[key] = val;
+  saveState();
+}
+
+function resetAll() {
+  if (confirm('确定要清除所有学习记录吗？重新开始学习。')) {
+    localStorage.removeItem('shizi_v3');
+    S = defaultState();
+    saveState();
+    initSession();
+    renderStudy();
+    renderManage();
+    toast('已重置，重新开始！');
+    showTab('study');
+  }
+}
+
+// ===== SPEECH =====
+function speak(text) {
+  if (!('speechSynthesis' in window)) { toast('您的浏览器不支持语音'); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  u.rate = 0.75;
+  u.pitch = 1.1;
+  window.speechSynthesis.speak(u);
+}
+
+function speakExample() {
+  if (!currentCardMeta) return;
+  const sentence = currentCardMeta.example.replace('★', currentCardMeta.char);
+  speak(sentence);
+}
+
+// ===== SYNC (export / import code, last-write-wins merge per character) =====
+function b64encode(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p) => String.fromCharCode('0x' + p)));
+}
+function b64decode(b64) {
+  return decodeURIComponent(Array.prototype.map.call(atob(b64), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+
+function generateSyncCode() {
+  const touched = S.words.filter(w => w.level > 0 || w.total > 0);
+  const payload = {
+    v: 1,
+    exportedAt: Date.now(),
+    settings: S.settings,
+    todayNew: S.todayNew,
+    lastDate: S.lastDate,
+    words: touched.map(w => [w.char, w.level, w.nextReview, w.correct, w.total, w.updatedAt || 0])
+  };
+  let code;
+  try { code = b64encode(JSON.stringify(payload)); }
+  catch (e) { toast('生成失败，请重试'); return; }
+  const box = document.getElementById('sync-export-box');
+  box.value = code;
+  box.style.display = 'block';
+  document.getElementById('copy-sync-btn').style.display = 'block';
+  document.getElementById('sync-status').textContent = `已生成，包含 ${touched.length} 个已学字的进度，点击下方按钮复制`;
+}
+
+function copySyncCode() {
+  const box = document.getElementById('sync-export-box');
+  box.style.display = 'block';
+  box.focus();
+  box.select();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(box.value).then(() => toast('同步码已复制')).catch(() => {
+      try { document.execCommand('copy'); toast('同步码已复制'); } catch (e) { toast('复制失败，请手动选中文本复制'); }
+    });
+  } else {
+    try { document.execCommand('copy'); toast('同步码已复制'); } catch (e) { toast('复制失败，请手动选中文本复制'); }
+  }
+}
+
+function importSyncCode() {
+  const raw = document.getElementById('sync-import-box').value.trim();
+  if (!raw) { toast('请先粘贴同步码'); return; }
+  let payload;
+  try { payload = JSON.parse(b64decode(raw)); }
+  catch (e) { document.getElementById('sync-status').textContent = '同步码格式不对，请重新复制粘贴'; return; }
+  if (!payload || !Array.isArray(payload.words)) {
+    document.getElementById('sync-status').textContent = '同步码格式不对';
+    return;
+  }
+  let mergedCount = 0;
+  payload.words.forEach(arr => {
+    const [char, level, nextReview, correct, total, updatedAt] = arr;
+    const idx = S.words.findIndex(w => w.char === char);
+    if (idx === -1) return;
+    const local = S.words[idx];
+    if ((updatedAt || 0) > (local.updatedAt || 0)) {
+      S.words[idx] = { ...local, level, nextReview, correct, total, updatedAt: updatedAt || 0 };
+      mergedCount++;
+    }
+  });
+  const today = new Date().toDateString();
+  if (payload.lastDate === today) {
+    if (S.lastDate === today) S.todayNew = Math.max(S.todayNew, payload.todayNew || 0);
+    else { S.todayNew = payload.todayNew || 0; S.lastDate = today; }
+  }
+  saveState();
+  document.getElementById('sync-status').textContent = `合并完成，更新了 ${mergedCount} 个字的进度`;
+  document.getElementById('sync-import-box').value = '';
+  toast(`已合并 ${mergedCount} 个字`);
+  initSession();
+  renderStudy();
+  renderManage();
+}
+
+// ===== TOAST =====
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ===== TABS =====
+function showTab(tab) {
+  ['study','manage','settings'].forEach(t => {
+    document.getElementById('view-' + t).classList.toggle('active', t === tab);
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['study','manage','settings'][i] === tab);
+  });
+  if (tab === 'manage') renderManage();
+  if (tab === 'settings') {
+    const el = document.getElementById('set-new');
+    el.value = S.settings.newPerDay;
+    document.getElementById('val-new').textContent = S.settings.newPerDay;
+  }
+}
+
+// ===== INIT =====
+initSession();
+renderStudy();
+</script>
+</body>
+</html>
